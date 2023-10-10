@@ -1,16 +1,18 @@
 import requests
 from prometheus_client import start_http_server, Gauge
 import time
+import os
 
-# Prometheus metriky
+
+# Prometheus metrics
 RESOURCE_GROUP_COUNT = Gauge('azure_resource_group_count', 'Count of Azure resource groups')
 
-# Konfigurace pro Azure
-TENANT_ID = '661f8f5f-1e7d-4d4d-a886-1d2661c4ddf8'
-CLIENT_ID = '318e5469-4fbd-4f2a-b5b2-6f86ac5a41c4'
-CLIENT_SECRET = '-PR8Q~xN5ruH.nC1J-_sBBIxuj8nuoNq6qnDxaNk'
+# Konfiguration for Azure
+TENANT_ID = os.environ["TENANT_ID"]
+CLIENT_ID = os.environ["CLIENT_ID"]
+CLIENT_SECRET = os.environ["CLIENT_SECRET"]
+SUBSCRIPTION_ID = os.environ["SUBSCRIPTION_ID"]
 RESOURCE = 'https://management.azure.com/'
-SUBSCRIPTION_ID = '135c4851-f605-41ab-b698-2a474bc0a94a'
 
 def get_token():
     token_url = f'https://login.microsoftonline.com/{TENANT_ID}/oauth2/token'
@@ -38,9 +40,11 @@ def update_metrics():
     RESOURCE_GROUP_COUNT.set(count)
 
 if __name__ == '__main__':
-    # Startuje Prometheus HTTP server na portu 8000
+    # Starting Prometheus HTTP server on port 8000
     start_http_server(8000)
     while True:
         update_metrics()
-        time.sleep(60)  # Aktualizuje metriky každou minutu
+        time.sleep(60)  # reads metrics every 1 minute
+
+
 

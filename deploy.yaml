@@ -1,8 +1,7 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: am2g-itopsprod
+  name: am2g-deployment
 spec:
   replicas: 1
   selector:
@@ -14,11 +13,11 @@ spec:
         app: am2g
     spec:
       containers:
-      - name: am2g-pod
+      - name: am2g-container
         image: mrfrace/am2g:latest
         ports:
-          - containerPort: 8000
-      env:
+        - containerPort: 8000
+        env:
         - name: TENANT_ID
           valueFrom:
             secretKeyRef:
@@ -37,10 +36,7 @@ spec:
         - name: SUBSCRIPTION_ID
           valueFrom:
             secretKeyRef:
-              name: sbscriptionid
+              name: subscriptionid
               key: key1
-      restartPolicy: Always
-
-
-
+      restartPolicy: Always # Automatic restart on failure
 

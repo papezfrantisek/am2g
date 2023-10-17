@@ -1,6 +1,8 @@
 import os
 import requests
 import json
+import re
+
 
 # Configuration for Azure
 TENANT_ID = os.environ["TENANT_ID"]
@@ -17,6 +19,7 @@ resourceGroups = {}
 resources = {}
 metric_def_urls = []
 metric_urls = []
+version_regex = r'\d\d\d\d-\d\d-\d\d-?[a-z][A-Z]?'
 
 
 
@@ -55,12 +58,12 @@ def get_azure_data(req_url, token):
     }
     endpoint_url = req_url
     response = requests.get(endpoint_url, headers=headers)
-    return response.json().get("value", [])
+    return response
     
 
 def get_resource_groups(token):
     headers = {
-        'Authorization': 'Bearer ' + token,
+        'Authorization': 'Bearer ' + str(token),
         'Content-Type': 'application/json'
     }
     endpoint_url = f'https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups?api-version=2020-06-01'
@@ -105,18 +108,27 @@ def generate_resources_dictionary():
     return resources
 
 def generate_metric_urls():
+    token = get_token()
     for i in range(0, len(resourceGroups)-1):
         if len(resourceGroups[i]['resources']) > 0:
             if 'resources' in resourceGroups[i].keys():
                 for k in range(0, len(resourceGroups[i]['resources'])-1):
                     if "type" in resourceGroups[i]['resources'][k].keys():
                         print(resourceGroups[i]['resources'][k]['type'])
-                        url = f"https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{resourceGroups[i]['name']}/providers/{resourceGroups[i]['resources'][k]['type']}/{resourceGroups[i]['resources'][k]['name']}/providers/microsoft.insights/metricDefinitions?api-version=2018-11-01"
-                        resources[resourceGroups[i]['resources'][k]['name']]['resurl'] = url
+                        testurl = f"https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{resourceGroups[i]['name']}/providers/{resourceGroups[i]['resources'][k]['type']}/{resourceGroups[i]['resources'][k]['name']}/providers/microsoft.insights/metricDefinitions?api-version=2222-22-22"
+                        message = get_azure_data(testurl, token).json()['error']['message']
+                        versions = re.findall(r'\d\d\d\d\-\d\d-\d\d', message)
+                        versions+= re.findall(r'\d\d\d\d\-\d\d-\d\d-?[a-z]+', message)
+                        print(versions)
+                        if len(versions) > 0:
+                            url = f"https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{resourceGroups[i]['name']}/providers/{resourceGroups[i]['resources'][k]['type']}/{resourceGroups[i]['resources'][k]['name']}/providers/microsoft.insights/metricDefinitions?api-version={versions[1]}"
+                            resources[resourceGroups[i]['resources'][k]['name']]['resurl'] = url
+                        else:
+                            print("Error: no version gathered from dummy request")
                     else:
                         print("fck")
             elif 'type' in resourceGroups[i].keys():
-                url = f"https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{resourceGroups[i]['name']}/providers/{resourceGroups[i]['type']}/{resourceGroups[i]['resources'][k]['name']}/providers/microsoft.insights/metricDefinitions?api-version=2018-11-01"
+                url = f"https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{resourceGroups[i]['name']}/providers/{resourceGroups[i]['type']}/{resourceGroups[i]['name']}/providers/microsoft.insights/metricDefinitions?api-version=2018-11-01"
                 print(url)
             else:
                 print("no resources")
@@ -129,7 +141,7 @@ assign_ressources() # create resources dicctionary
 write_actual_status(CFGFILENAME, resourceGroups)
 resources = generate_resources_dictionary()
 generate_metric_urls()
-write_actual_status('data/resources.json')
+write_actual_status('data/resources.json', resources)
 
 
 

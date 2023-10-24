@@ -12,11 +12,13 @@ spec:
       labels:
         app: am2g
     spec:
-      containers:
+      containers:   
       - name: am2g-container
         image: mrfrace/am2g:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
+        - containerPort: 9090
         env:
         - name: TENANT_ID
           valueFrom:
@@ -39,4 +41,3 @@ spec:
               name: subscriptionid
               key: key1
       restartPolicy: Always # Automatic restart on failure
-

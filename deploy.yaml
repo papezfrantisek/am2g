@@ -14,7 +14,7 @@ spec:
     spec:
       containers:   
       - name: am2g-container
-        image: mrfrace/am2g:latest
+        image: mrfrace/am2g:test
         imagePullPolicy: Always
         ports:
         - containerPort: 8000

@@ -37,15 +37,14 @@ VOLUME /var/lib/prometheus
 VOLUME /am2g
 
 
-ADD conf/prometheus.yml /etc/prometheus/
-ADD conf/resourcegroups /am2g/data/ 
-ADD master.py /am2g/
+ADD conf/prometheus.yml /etc/prometheus/ 
+ADD am2g /am2g/
 
 ENTRYPOINT /usr/local/bin/prometheus \ 
             --config.file /etc/prometheus/prometheus.yml \ 
             --storage.tsdb.path /var/lib/prometheus/ \
             --web.console.libraries=/usr/share/prometheus/console_libraries \
-            --web.console.templates=/usr/share/prometheus/consoles & python /am2g/master.py
+            --web.console.templates=/usr/share/prometheus/consoles & python /am2g/am2g
 
 
 EXPOSE 9090
